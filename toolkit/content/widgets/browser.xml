@@ -464,8 +464,11 @@
 
             var popup = document.getElementById(this.getAttribute("autocompletepopup"));
             if (popup) {
-              controller.attachToBrowser(this.docShell, popup.QueryInterface(Components.interfaces.nsIAutoCompletePopup));
-              this.mFormFillAttached = true;
+              // Bug 897061 - Form autocompletion is broken in  e10s
+              if (this.docShell) {
+                controller.attachToBrowser(this.docShell, popup.QueryInterface(Components.interfaces.nsIAutoCompletePopup));
+                this.mFormFillAttached = true;
+              }
             }
           }
           ]]>
