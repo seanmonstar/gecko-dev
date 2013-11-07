@@ -59,6 +59,9 @@ function testOnLoad() {
     messageManager.loadFrameScript(listener, true);
     messageManager.addMessageListener("chromeEvent", messageHandler);
   }
+  if (gConfig.e10s) {
+    e10s_init();
+  }
 }
 
 function Tester(aTests, aDumper, aCallback) {
