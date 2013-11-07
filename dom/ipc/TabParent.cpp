@@ -230,6 +230,17 @@ TabParent::SetOwnerElement(Element* aElement)
 {
   mFrameElement = aElement;
   TryCacheDPIAndScale();
+  if (mFrameElement) {
+    // Send an observer notification of the browser being created.  The owner
+    // element is only set to a non-null value once making this a convenient
+    // place to send it.
+    nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+    nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+    if (os && frameLoader) {
+      os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, frameLoader),
+                          "oop-frameloader-created", nullptr);
+    }
+  }
 }
 
 void
