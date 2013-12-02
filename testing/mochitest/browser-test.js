@@ -36,6 +36,8 @@ function testOnLoad() {
     if (prefs.prefHasUserValue("testing.browserTestHarness.timeout"))
       gTimeoutSeconds = prefs.getIntPref("testing.browserTestHarness.timeout");
 
+    dump("browser-test.js initializing with e10s=" + gConfig.e10s + ", pref=" + prefs.getBoolPref("browser.tabs.remote") + "\n");
+
     var sstring = Cc["@mozilla.org/supports-string;1"].
                   createInstance(Ci.nsISupportsString);
     sstring.data = location.search;
