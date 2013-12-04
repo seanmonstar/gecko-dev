@@ -456,8 +456,9 @@ def MochitestCommand(func):
         help='Start the browser JS debugger before running the test. Implies --no-autorun.')
     func = jsdebugger(func)
 
-    this_chunk = CommandArgument('--e10s', action='store_true',
-        help='Run tests with electrolysis preferences and test filtering enabled.')
+    this_chunk = CommandArgument('--no-e10s', action='store_false',
+                                 default=True, dest="e10s",
+        help='Run tests without electrolysis preferences and test filtering enabled.')
     func = this_chunk(func)
 
     dmd = CommandArgument('--dmd', action='store_true',

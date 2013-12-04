@@ -87,6 +87,7 @@ def build_dict(config, env=os.environ):
     d['webm'] = bool(substs.get('MOZ_WEBM'))
     d['wave'] = bool(substs.get('MOZ_WAVE'))
 
+    d['e10s'] = substs.get('MOZ_E10S') == '1'
     return d
 
 
