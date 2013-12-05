@@ -571,6 +571,12 @@ class Mochitest(MochitestUtilsMixin):
     if options.browserChrome and options.timeout:
       options.extraPrefs.append("testing.browserTestHarness.timeout=%d" % options.timeout)
     options.extraPrefs.append("browser.tabs.remote=%s" % ('true' if options.e10s else 'false'))
+    # On Windows (and possibly elsewhere), OMTC and hw accel don't mix well, so
+    # disable that here.
+    if options.e10s:
+      options.extraPrefs.append("layers.offmainthreadcomposition.prefer-basic=true")
+      options.extraPrefs.append("gfx.direct2d.disabled=true")
+      options.extraPrefs.append("layers.acceleration.disabled=true")
 
     # get extensions to install
     extensions = self.getExtensionsToInstall(options)
