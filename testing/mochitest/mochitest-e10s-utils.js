@@ -71,9 +71,10 @@ function e10s_init() {
     let event = document.createEvent('HTMLEvents');
     event.initEvent(message.data.name, true, true, {});
     message.target.dispatchEvent(event);
+  });
 
   // We add an observer so we can notice new <browser> elements created
-  Services.obs.addObserver(observeNewFrameloader, "remote-browser-frame-shown", false);
+  Services.obs.addObserver(observeNewFrameloader, "remote-browser-shown", false);
 
   // Listen for an 'oop-browser-crashed' event and log it so people analysing
   // test logs have a clue about what is going on.
