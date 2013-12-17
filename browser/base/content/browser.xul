@@ -328,6 +328,7 @@
     <panel id="identity-popup"
            type="arrow"
            hidden="true"
+           animate="true"
            noautofocus="true"
            onpopupshown="if (event.target == this)
                            gIdentityHandler.onPopupShown(event);"

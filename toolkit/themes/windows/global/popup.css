@@ -74,6 +74,17 @@ panel[type="arrow"][side="right"] {
   margin-bottom: -20px;
 }
 
+panel[type="arrow"][animate] {
+  transition: transform 200ms ease-out,
+  opacity 200ms ease-out;
+  transform: scale(1);
+}
+
+panel[type="arrow"][animate]:not([animatein]) {
+  /*transform: scale(0);*/
+  /*opacity: 0;*/
+}
+
 .panel-arrowcontent {
   border-radius: 4px;
   padding: 10px;

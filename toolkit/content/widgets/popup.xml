@@ -433,6 +433,7 @@
     <handlers>
       <handler event="popupshowing" phase="target">
       <![CDATA[
+      dump('showing\n');
         this.adjustArrowPosition();
         // set fading
         var fade = this.getAttribute("fade");
@@ -445,6 +446,11 @@
       ]]>
       </handler>
       <handler event="popuphiding" phase="target">
+        if (this.getAttribute("animatein")) {
+          // Popup will be hidden after the transition finishes
+          event.preventDefault();
+          this.removeAttribute("animatein");
+        }
         clearTimeout(this._fadeTimer);
         this.style.removeProperty("opacity");
       </handler>
@@ -458,7 +464,23 @@
       ]]>
       </handler>
       <handler event="popupshown" phase="target">
+      <![CDATA[
         this.setAttribute("panelopen", "true");
+        dump("doing animate\n");
+        if (this.getAttribute("animate")) {
+          let arrowbox = document.getAnonymousElementByAttribute(this, "anonid", "arrowbox");
+          let horizOrigin = arrowbox.pack == "start" ? "0" : "100%";
+
+          let side = this.getAttribute("side");
+          let vertOrigin = side == "top" ? "0" : "100%";
+
+          // Set transform-origin based on arrow position
+          this.setAttribute("style", "transform-origin: " + horizOrigin + " " + vertOrigin + ";");
+
+          this.setAttribute("animatein", "true");
+          dump("did animate\n");
+        }
+      ]]>
       </handler>
       <handler event="popuphidden" phase="target">
         this.removeAttribute("panelopen");
