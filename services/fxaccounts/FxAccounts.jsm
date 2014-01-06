@@ -397,6 +397,16 @@ InternalMethods.prototype = {
                 this.whenVerifiedPromise.resolve(data);
                 delete this.whenVerifiedPromise;
               }
+              // Bug 956605 - about:accounts should automagically update when
+              // the verification state changes, but for now we need to
+              // explicitly reload any such tabs which may be open.
+              // them.
+              let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+              if (browserWindow) {
+                for (let browser of browserWindow.findAllBrowsersHavingURI("about:accounts")) {
+                  browser.reload();
+                }
+              }
             });
         } else {
           log.debug("polling with step = " + this.POLL_STEP);
