@@ -6885,6 +6885,57 @@ let gPrivateBrowsingUI = {
 
 
 /**
+ * Find all browsers (for tabs) that have a given URI.  Returns a generator
+ * that yields the browser for all such tabs, with matching tabs in the current
+ * window yielded before other windows.
+ *
+ * @param aURI
+ *        URI to search for
+ * @return A generator.  If you only care about the first such tab, just
+ *         abort the generator after the first hit.
+ */
+function* findAllBrowsersHavingURI(aURI) {
+  // This will find all tabs in in aWindow having aURI.
+  function* findAllInWindow(aWindow) {
+    // Only switch to the tab if neither the source and desination window are
+    // private and they are not in permanent private borwsing mode
+    if ((PrivateBrowsingUtils.isWindowPrivate(window) ||
+        PrivateBrowsingUtils.isWindowPrivate(aWindow)) &&
+        !PrivateBrowsingUtils.permanentPrivateBrowsing) {
+      return;
+    }
+
+    for (let browser of aWindow.gBrowser.browsers) {
+      if (browser.currentURI.equals(aURI))
+        yield browser;
+    }
+  }
+
+  // This can be passed either nsIURI or a string.
+  if (!(aURI instanceof Ci.nsIURI))
+    aURI = Services.io.newURI(aURI, null, null);
+
+  let isBrowserWindow = !!window.gBrowser;
+
+  // Prioritise this window.
+  if (isBrowserWindow) {
+    for (let browser of findAllInWindow(window))
+      yield browser;
+  }
+
+  let winEnum = Services.wm.getEnumerator("navigator:browser");
+  while (winEnum.hasMoreElements()) {
+    let browserWin = winEnum.getNext();
+    // Skip closed (but not yet destroyed) windows,
+    // and the current window (which was checked earlier).
+    if (browserWin.closed || browserWin == window)
+      continue;
+    for (let browser of findAllInWindow(browserWin))
+      yield browser;
+  }
+}
+
+/**
  * Switch to a tab that has a given URI, and focusses its browser window.
  * If a matching tab is in this window, it will be switched to. Otherwise, other
  * windows will be searched.
@@ -6897,56 +6948,27 @@ let gPrivateBrowsingUI = {
  * @return True if an existing tab was found, false otherwise
  */
 function switchToTabHavingURI(aURI, aOpenNew) {
-  // This will switch to the tab in aWindow having aURI, if present.
-  function switchIfURIInWindow(aWindow) {
-    // Only switch to the tab if neither the source and desination window are
-    // private and they are not in permanent private borwsing mode
-    if ((PrivateBrowsingUtils.isWindowPrivate(window) ||
-        PrivateBrowsingUtils.isWindowPrivate(aWindow)) &&
-        !PrivateBrowsingUtils.permanentPrivateBrowsing) {
-      return false;
-    }
-
-    let browsers = aWindow.gBrowser.browsers;
-    for (let i = 0; i < browsers.length; i++) {
-      let browser = browsers[i];
-      if (browser.currentURI.equals(aURI)) {
-        // Focus the matching window & tab
-        aWindow.focus();
-        aWindow.gBrowser.tabContainer.selectedIndex = i;
-        return true;
-      }
-    }
-    return false;
-  }
-
-  // This can be passed either nsIURI or a string.
-  if (!(aURI instanceof Ci.nsIURI))
-    aURI = Services.io.newURI(aURI, null, null);
-
-  let isBrowserWindow = !!window.gBrowser;
-
-  // Prioritise this window.
-  if (isBrowserWindow && switchIfURIInWindow(window))
+  for (let browser of findAllBrowsersHavingURI(aURI)) {
+    // Focus the matching window & tab
+    let browserWin = browser.ownerDocument.defaultView;
+    browserWin.focus();
+    let newIndex = browserWin.gBrowser.browsers.indexOf(browser);
+    browserWin.gBrowser.tabContainer.selectedIndex = newIndex;
+    // and stop after finding the first one.
     return true;
-
-  let winEnum = Services.wm.getEnumerator("navigator:browser");
-  while (winEnum.hasMoreElements()) {
-    let browserWin = winEnum.getNext();
-    // Skip closed (but not yet destroyed) windows,
-    // and the current window (which was checked earlier).
-    if (browserWin.closed || browserWin == window)
-      continue;
-    if (switchIfURIInWindow(browserWin))
-      return true;
   }
 
   // No opened tab has that url.
   if (aOpenNew) {
+    let isBrowserWindow = !!window.gBrowser;
+    // This can be passed either nsIURI or a string.
+    if (aURI instanceof Ci.nsIURI)
+      aURI = aURI.spec;
+
     if (isBrowserWindow && isTabEmpty(gBrowser.selectedTab))
-      gBrowser.selectedBrowser.loadURI(aURI.spec);
+      gBrowser.selectedBrowser.loadURI(aURI);
     else
-      openUILinkIn(aURI.spec, "tab");
+      openUILinkIn(aURI, "tab");
   }
 
   return false;
