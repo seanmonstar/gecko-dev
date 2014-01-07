@@ -13,7 +13,8 @@ var pathParts = gTestPath.split("/");
 // Drop the test filename
 pathParts.splice(pathParts.length - 1, pathParts.length);
 
-var gTestInWindow = /-window$/.test(pathParts[pathParts.length - 1]);
+// head_window.js will reset this to true when in-window tests are run
+var gTestInWindow = false;
 
 // Drop the UI type
 pathParts.splice(pathParts.length - 1, pathParts.length);
