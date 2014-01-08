@@ -19,6 +19,7 @@
 #ifdef MOZ_SERVICES_SYNC
     locale/browser/syncProgress.dtd                (%chrome/browser/syncProgress.dtd)
     locale/browser/aboutSyncTabs.dtd               (%chrome/browser/aboutSyncTabs.dtd)
+    locale/browser/aboutSyncSetup.dtd              (%chrome/browser/aboutSyncSetup.dtd)
 #endif
     locale/browser/browser.dtd                     (%chrome/browser/browser.dtd)
     locale/browser/baseMenuOverlay.dtd             (%chrome/browser/baseMenuOverlay.dtd)

@@ -77,6 +77,9 @@ browser.jar:
         content/browser/pageinfo/permissions.js       (content/pageinfo/permissions.js)
         content/browser/pageinfo/security.js          (content/pageinfo/security.js)
 #ifdef MOZ_SERVICES_SYNC
+        content/browser/sync/aboutSyncSetup.xhtml     (content/sync/aboutSyncSetup.xhtml)
+        content/browser/sync/aboutSyncSetup.js        (content/sync/aboutSyncSetup.js)
+        content/browser/sync/aboutSyncSetup.css       (content/sync/aboutSyncSetup.css)
         content/browser/sync/aboutSyncTabs.xul        (content/sync/aboutSyncTabs.xul)
         content/browser/sync/aboutSyncTabs.js         (content/sync/aboutSyncTabs.js)
         content/browser/sync/aboutSyncTabs.css        (content/sync/aboutSyncTabs.css)

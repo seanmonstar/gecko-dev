@@ -1,0 +1,8 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!ENTITY aboutSyncSetup.pageTitle "Welcome to Sync">
+<!ENTITY aboutSyncSetup.description "Sign in to backup and sync your tabs, bookmarks, and more whereever you use &brandShortName;!">
+<!ENTITY aboutSyncSetup.getStarted "Get Started">
+<!ENTITY aboutSyncSetup.useOldSync "Using Sync on an older version of &brandShortName;? <a href='#' onclick='handleOldSync();'>Click Here</a>">
