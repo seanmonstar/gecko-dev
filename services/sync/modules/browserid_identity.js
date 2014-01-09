@@ -53,6 +53,11 @@ this.BrowserIDManager.prototype = {
   _token: null,
   _account: null,
 
+  // it takes some time to fetch a sync key bundle, so until this flag is set,
+  // we don't consider the lack of the bundle to mean that the authState is
+  // such that we need to authorize.
+  _shouldHaveSyncKeyBundle: false,
+
   /**
    * Provide override point for testing token expiration.
    */
@@ -148,6 +153,7 @@ this.BrowserIDManager.prototype = {
     this._syncKey = null;
     this._syncKeyBundle = null;
     this._syncKeyUpdated = true;
+    this._shouldHaveSyncKeyBundle = false;
   },
 
   /**
@@ -166,8 +172,8 @@ this.BrowserIDManager.prototype = {
 
     // No need to check this.syncKey as our getter for that attribute
     // uses this.syncKeyBundle
-    // If bundle creation failed.
-    if (!this.syncKeyBundle) {
+    // If bundle creation started, but failed.
+    if (this._shouldHaveSyncKeyBundle && !this.syncKeyBundle) {
       return LOGIN_FAILED_NO_PASSPHRASE;
     }
 
@@ -251,6 +257,7 @@ this.BrowserIDManager.prototype = {
         // both Jelly and FxAccounts give us kA/kB as hex.
         let kB = Utils.hexToBytes(userData.kB);
         this._syncKeyBundle = deriveKeyBundle(kB);
+        this._shouldHaveSyncKeyBundle = true;
 
         // Set the clusterURI for this user based on the endpoint in the
         // token. This is a bit of a hack, and we should figure out a better
@@ -259,6 +266,10 @@ this.BrowserIDManager.prototype = {
         clusterURI.path = "/";
         this.clusterURL = clusterURI.spec;
         this._log.info("initWithLoggedUser has username " + this.username + ", endpoint is " + this.clusterURL);
+      }).then(null, err => {
+        // something above failed...
+        this._shouldHaveSyncKeyBundle = true;
+        throw err;
       });
   },
 
