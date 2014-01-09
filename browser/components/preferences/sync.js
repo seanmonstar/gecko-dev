@@ -88,16 +88,36 @@ let gSyncPane = {
   },
 
   updateWeavePrefs: function () {
+    let service = Components.classes["@mozilla.org/weave/service;1"]
+                  .getService(Components.interfaces.nsISupports)
+                  .wrappedJSObject;
     if (Weave.Status.service == Weave.CLIENT_NOT_CONFIGURED ||
         Weave.Svc.Prefs.get("firstSync", "") == "notReady") {
-      this.page = PAGE_NO_ACCOUNT;
-      let service = Components.classes["@mozilla.org/weave/service;1"]
-                    .getService(Components.interfaces.nsISupports)
-                    .wrappedJSObject;
-      // no concept of "pair" in an fxAccounts world.
-      if (service.fxAccountsEnabled) {
-        document.getElementById("pairDevice").hidden = true;
-      }
+      // In Fx29+, "not configured" means only FxAccounts can be used to configure.
+      // XXX - TODO - use a setter like the "old weave" deck does?
+      document.getElementById("weaveEntryPoint").selectedIndex = 1;
+      document.getElementById("weaveFxaPrefsDeck").selectedIndex = 0;
+    } else if (service.fxAccountsEnabled) {
+      // we seem to have previously been configured for Fxa.
+      document.getElementById("weaveEntryPoint").selectedIndex = 1;
+      document.getElementById("weaveFxaPrefsDeck").selectedIndex = 1;
+      // hide both the signedIn and signedOut boxes until we know which one
+      // applies
+      let signedIn = document.getElementById("signedIn");
+      let signedOut = document.getElementById("signedOut");
+      Components.utils.import("resource://gre/modules/FxAccounts.jsm");
+
+      signedIn.hidden = signedOut.hidden = true;
+      fxAccounts.getSignedInUser().then(data => {
+        signedIn.hidden = !data;
+        signedOut.hidden = !signedIn.hidden;
+        if (data) {
+          document.getElementById("fxaEmailAddress").textContent = data.email;
+        }
+      });
+    // else: sync was previously configured, so we allow most of the existing
+    // panels to be shown.
+    // no need to set weaveEntryPoint to zero - it can never have been non-zero
     } else if (Weave.Status.login == Weave.LOGIN_FAILED_INVALID_PASSPHRASE ||
                Weave.Status.login == Weave.LOGIN_FAILED_LOGIN_REJECTED) {
       this.needsUpdate();

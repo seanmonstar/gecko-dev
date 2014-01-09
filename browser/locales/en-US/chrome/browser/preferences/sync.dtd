@@ -45,3 +45,9 @@
 <!-- Footer stuff -->
 <!ENTITY prefs.tosLink.label        "Terms of Service">
 <!ENTITY prefs.ppLink.label         "Privacy Policy">
+
+<!-- Firefox Accounts stuff -->
+<!ENTITY signedInAs.beforename.label "Signed in as: ">
+<!ENTITY signedInAs.aftername.label  "">
+<!ENTITY notSignedIn.label           "You are not signed in">
+<!ENTITY signIn.label                "Sign in">
