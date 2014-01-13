@@ -58,6 +58,47 @@ this.BrowserIDManager.prototype = {
   // such that we need to authorize.
   _shouldHaveSyncKeyBundle: false,
 
+  initializeIdentityManager: function() {
+    Components.utils.import("resource://services-sync/main.js");
+    // FxAccounts imports lots of stuff, so only do this as we need it
+    Cu.import("resource://gre/modules/FxAccounts.jsm");
+
+    // This isn't quite sufficient here to handle all the cases. Cases
+    // we need to handle:
+    //  - User is signed in to FxAccounts, btu hasn't set up sync.
+    return fxAccounts.getSignedInUser().then(
+      (accountData) => {
+        if (accountData) {
+          // Init the identity module with any account data from
+          // firefox accounts. The Identity module will fetch the signed in
+          // user from fxAccounts directly.
+          this.initWithLoggedInUser().then(function () {
+            // Set the cluster data that we got from the token
+            Weave.Service.clusterURL = this.clusterURL;
+            // checkSetup() will check the auth state of the identity module
+            // and records that status in Weave.Status
+            if (Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED) {
+              // This makes sure that Weave.Service is loaded
+              Svc.Obs.notify("weave:service:setup-complete");
+              // TODO: this shouldn't be here. It should be at the end
+              // of the promise chain of the 'fxaccounts:onlogin' handler.
+              // XXX - we don't want to sync here - normal processes should work
+              //Weave.Utils.nextTick(Weave.Service.sync, Weave.Service);
+              //this.ensureLoaded();
+            }
+          }.bind(this));
+        } else if (Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED) {
+          // This makes sure that Weave.Service is loaded
+          this.ensureLoaded();
+        }
+      },
+      (err) => {dump("err in getting logged in account "+err.message)}
+    ).then(null, (err) => {
+      dump("err in processing logged in account "+err.message);
+      throw(err);
+    });
+  },
+
   /**
    * Provide override point for testing token expiration.
    */

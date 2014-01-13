@@ -61,8 +61,9 @@ WeaveService.prototype = {
   ensureLoaded: function () {
     Components.utils.import("resource://services-sync/main.js");
 
-    // Side-effect of accessing the service is that it is instantiated.
-    Weave.Service;
+    // Ask the identity manager to initialize, and a side-effect of accessing
+    // the service is that it is instantiated.
+    Weave.Service.identity.initializeIdentityManager();
   },
 
   get fxAccountsEnabled() {
@@ -77,48 +78,6 @@ WeaveService.prototype = {
     return this.fxAccountsEnabled = fxAccountsEnabled;
   },
 
-  maybeInitWithFxAccountsAndEnsureLoaded: function() {
-    Components.utils.import("resource://services-sync/main.js");
-    // FxAccounts imports lots of stuff, so only do this as we need it
-    Cu.import("resource://gre/modules/FxAccounts.jsm");
-
-    // This isn't quite sufficient here to handle all the cases. Cases
-    // we need to handle:
-    //  - User is signed in to FxAccounts, btu hasn't set up sync.
-    return fxAccounts.getSignedInUser().then(
-      (accountData) => {
-        if (accountData) {
-          Cu.import("resource://services-sync/browserid_identity.js");
-          // The Sync Identity module needs to be set in both these places if
-          // it's swapped out as we are doing here. When Weave.Service initializes
-          // it grabs a reference to Weave.Status._authManager, and for references
-          // to Weave.Service.identity to resolve correctly, we also need to reset
-          // Weave.Service.identity as well.
-          Weave.Service.identity = Weave.Status._authManager = new BrowserIDManager(),
-          // Init the identity module with any account data from
-          // firefox accounts. The Identity module will fetch the signed in
-          // user from fxAccounts directly.
-          Weave.Service.identity.initWithLoggedInUser().then(function () {
-            // Set the cluster data that we got from the token
-            Weave.Service.clusterURL = Weave.Service.identity.clusterURL;
-            // checkSetup() will check the auth state of the identity module
-            // and records that status in Weave.Status
-            if (Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED) {
-              // This makes sure that Weave.Service is loaded
-              Svc.Obs.notify("weave:service:setup-complete");
-              // TODO: this shouldn't be here. It should be at the end
-              // of the promise chain of the 'fxaccounts:onlogin' handler.
-              Weave.Utils.nextTick(Weave.Service.sync, Weave.Service);
-              this.ensureLoaded();
-            }
-          }.bind(this));
-        } else if (Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED) {
-          // This makes sure that Weave.Service is loaded
-          this.ensureLoaded();
-        }
-      },
-      (err) => {dump("err in getting logged in account "+err.message)}
-    ).then(null, (err) => {dump("err in processing logged in account "+err.message)});
   },
 
   observe: function (subject, topic, data) {
@@ -136,26 +95,20 @@ WeaveService.prototype = {
       this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
       this.timer.initWithCallback({
         notify: function() {
-          if (this.fxAccountsEnabled) {
-            // init  the fxAccounts identity manager.
-            this.maybeInitWithFxAccountsAndEnsureLoaded();
-          } else {
-            // init the "old" style, sync-specific identity manager.
-            // We only load more if it looks like Sync is configured.
-            let prefs = Services.prefs.getBranch(SYNC_PREFS_BRANCH);
-            if (!prefs.prefHasUserValue("username")) {
-              return;
-            }
+          // We only load more if it looks like Sync is configured.
+          let prefs = Services.prefs.getBranch(SYNC_PREFS_BRANCH);
+          if (!prefs.prefHasUserValue("username")) {
+            return;
+          }
 
-            // We have a username. So, do a more thorough check. This will
-            // import a number of modules and thus increase memory
-            // accordingly. We could potentially copy code performed by
-            // this check into this file if our above code is yielding too
-            // many false positives.
-            Components.utils.import("resource://services-sync/main.js");
-            if (Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED) {
-              this.ensureLoaded();
-            }
+          // We have a username. So, do a more thorough check. This will
+          // import a number of modules and thus increase memory
+          // accordingly. We could potentially copy code performed by
+          // this check into this file if our above code is yielding too
+          // many false positives.
+          Components.utils.import("resource://services-sync/main.js");
+          if (Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED) {
+            this.ensureLoaded();
           }
         }.bind(this)
       }, 10000, Ci.nsITimer.TYPE_ONE_SHOT);
