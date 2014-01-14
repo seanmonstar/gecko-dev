@@ -128,22 +128,36 @@ WeaveService.prototype = {
       break;
 
     case 'fxaccounts:onlogin':
+        if (!this.fxAccountsEnabled) {
+          return;
+        }
+        // XXX - this is all wrong too, surely?  ie, how is this case any different
+        // than a first-sync in the old world??
+
         // Tell sync that if this is a first sync, it should try and sync the
         // server data with what is on the client - despite the name implying
         // otherwise, this is what "resetClient" does.
         // TOOD: This implicitly assumes we're in the CLIENT_NOT_CONFIGURED state, and
         // if we're not, we should handle it here.
-        Components.utils.import("resource://services-sync/main.js"); // ensure 'Weave' exists
-        Weave.Svc.Prefs.set("firstSync", "resetClient");
-        this.maybeInitWithFxAccountsAndEnsureLoaded().then(() => {
+//        Components.utils.import("resource://services-sync/main.js"); // ensure 'Weave' exists
+//        Weave.Svc.Prefs.set("firstSync", "resetClient");
+//        this.maybeInitWithFxAccountsAndEnsureLoaded().then(() => {
           // and off we go...
           // TODO: I have this being done in maybeInitWithFxAccountsAndEnsureLoaded
           // because I had a bug in the promise chains that was triggering this
           // too early. This should be fixed.
           //Weave.Utils.nextTick(Weave.Service.sync, Weave.Service);
-        });
+//        });
       break;
     case 'fxaccounts:onlogout':
+      if (!this.fxAccountsEnabled) {
+        return;
+      }
+      // XXX - and this seems bogus too - ie, even if startOver worked for us,
+      // I doubt we want to call it so all preferences etc are reset?
+      // Or maybe we do on a new login with a different username?  But surely
+      // the fact I choose to log out and later log back in with the same username
+      // shouldn't reset all my prefs.
       Components.utils.import("resource://services-sync/main.js"); // ensure 'Weave' exists
       // startOver is throwing some errors and we can't re-log in in this
       // session - so for now, we don't do this!
