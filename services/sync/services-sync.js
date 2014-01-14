@@ -73,3 +73,6 @@ pref("services.sync.log.logger.userapi", "Debug");
 pref("services.sync.log.cryptoDebug", false);
 
 pref("services.sync.tokenServerURI", "http://auth.oldsync.dev.lcip.org/1.0/sync/1.1");
+
+pref("services.sync.fxa.termsURL", "https://accounts.dev.lcip.org/tos");
+pref("services.sync.fxa.privacyURL", "https://accounts.dev.lcip.org/pp");
