@@ -67,10 +67,24 @@ WeaveService.prototype = {
   },
 
   get fxAccountsEnabled() {
-    let fxAccountsEnabled = false;
+    // work out what identity manager to use.  This is stored in a preference;
+    // if the preference exists, we trust it.
+    let fxAccountsEnabled;
     try {
       fxAccountsEnabled = Services.prefs.getBoolPref("identity.fxaccounts.enabled");
     } catch (_) {
+      dump("Need to sniff and see if fxa should be used or not...\n");
+      // that pref doesn't exist - so let's assume this is a first-run
+      // If sync already appears configured, we assume it's for the legacy
+      // provider.
+      try {
+        fxAccountsEnabled = !Services.prefs.getCharPref("services.sync.username");
+      } catch (_) {
+        // no username pref, which means not configured, which means fxa.
+        fxAccountsEnabled = true;
+      }
+      dump("sniffed that fxa=" + fxAccountsEnabled + "\n")
+      Services.prefs.setBoolPref("identity.fxaccounts.enabled", fxAccountsEnabled);
     }
 
     // Currently we don't support toggling this pref after initialization -
