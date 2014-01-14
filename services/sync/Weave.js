@@ -72,12 +72,11 @@ WeaveService.prototype = {
       fxAccountsEnabled = Services.prefs.getBoolPref("identity.fxaccounts.enabled");
     } catch (_) {
     }
-    // Currently we don't support toggling this pref after initialization, so
-    // inject the pref value as a regular boolean.
-    delete this.fxAccountsEnabled;
-    return this.fxAccountsEnabled = fxAccountsEnabled;
-  },
 
+    // Currently we don't support toggling this pref after initialization -
+    // except when sync is reset - but this 1 exception is enough that we can't
+    // cache the value.
+    return fxAccountsEnabled;
   },
 
   observe: function (subject, topic, data) {

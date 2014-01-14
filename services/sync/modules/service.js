@@ -67,6 +67,13 @@ Sync11Service.prototype = {
   metaURL: null,
   cryptoKeyURL: null,
 
+  get identity() {
+    return Status._authManager;
+  },
+  set identity(val) {
+    throw new Error("You can't set the identity");
+  },
+
   get enabledEngineNames() {
     return [e.name for each (e in this.engineManager.getEnabled())];
   },
@@ -312,7 +319,6 @@ Sync11Service.prototype = {
     }
 
     this.status = Status;
-    this.identity = Status._authManager;
     this.collectionKeys = new CollectionKeyManager();
 
     this.errorHandler = new ErrorHandler(this);
@@ -879,7 +885,16 @@ Sync11Service.prototype = {
 
     this.identity.deleteSyncCredentials();
 
-    Svc.Obs.notify("weave:service:start-over:finish");
+    // and reset the identity manager so when its reinitialized it should
+    // determine to use Fxa.
+    this.identity.username = "";
+    this.status.__authManager = null;
+    Services.prefs.clearUserPref("identity.fxaccounts.enabled");
+    dump("Reset all sync stuff\n");
+    // tell the new identity manager to initialize itself
+    this.identity.initializeIdentityManager().then(() => {
+      Svc.Obs.notify("weave:service:start-over:finish");
+    });
   },
 
   persistLogin: function persistLogin() {
